@@ -38,11 +38,11 @@ function Home() {
       )}
 
       {/* All caught up */}
-      {posts.length > 0 && !hasMore && (
+      {posts.length >= 10 && !hasMore && (
         <div className="text-center py-4 text-gray-400 text-sm">
-          You're all caught up!
+            You're all caught up!
         </div>
-      )}
+)}
 
     </div>
   )
