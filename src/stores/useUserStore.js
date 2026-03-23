@@ -1,11 +1,20 @@
 import { create } from 'zustand'
 import api from '../api/axios'
 
+// Check token expiry on startup — runs before store is created
+const tokenExpiresAt = localStorage.getItem('tokenExpiresAt')
+const tokenExpired = tokenExpiresAt && Date.now() > Number(tokenExpiresAt)
+
+if (tokenExpired) {
+  localStorage.removeItem('token')
+  localStorage.removeItem('tokenExpiresAt')
+}
+
 const useUserStore = create((set) => ({
   // State
   profile: null,
-  token: localStorage.getItem('token') || null,
-  isAuthenticated: !!localStorage.getItem('token'),
+  token: tokenExpired ? null : localStorage.getItem('token') || null,
+  isAuthenticated: tokenExpired ? false : !!localStorage.getItem('token'),
 
   // Signup
   signup: async (formData) => {
@@ -19,12 +28,26 @@ const useUserStore = create((set) => ({
       email: formData.email,
       password: formData.password
     })
-    localStorage.setItem('token', response.data.token)
-    set({
-      token: response.data.token,
-      isAuthenticated: true
-    })
+
+    const token = response.data.token
+    const expiresAt = Date.now() + 60 * 60 * 1000
+
+    localStorage.setItem('token', token)
+    localStorage.setItem('tokenExpiresAt', expiresAt)
+
+    set({ token, isAuthenticated: true })
+
     return response.data
+  },
+
+  // Check token expiry
+  checkTokenExpiry: () => {
+    const expiresAt = localStorage.getItem('tokenExpiresAt')
+    if (expiresAt && Date.now() > Number(expiresAt)) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('tokenExpiresAt')
+      set({ token: null, profile: null, isAuthenticated: false })
+    }
   },
 
   // Fetch profile
@@ -42,6 +65,7 @@ const useUserStore = create((set) => ({
   // Logout
   logout: () => {
     localStorage.removeItem('token')
+    localStorage.removeItem('tokenExpiresAt')
     set({ token: null, profile: null, isAuthenticated: false })
   }
 }))

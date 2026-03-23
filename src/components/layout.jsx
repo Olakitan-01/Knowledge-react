@@ -4,11 +4,12 @@ import BottomNavbar from './bottomNavbar'
 import useUserStore from '../stores/useUserStore'
 
 function Layout({ children }) {
-  const { fetchProfile } = useUserStore()
+  const { fetchProfile, checkTokenExpiry } = useUserStore()
 
   useEffect(() => {
+    checkTokenExpiry()
     fetchProfile()
-  }, [fetchProfile])
+  }, [fetchProfile, checkTokenExpiry])
 
   return (
     <div className="pb-16 pt-14 min-h-screen bg-gray-50">
