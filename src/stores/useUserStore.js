@@ -51,10 +51,17 @@ const useUserStore = create((set) => ({
   },
 
   // Fetch profile
-  fetchProfile: async () => {
-    const response = await api.get('/users/me')
-    set({ profile: response.data })
-  },
+    fetchProfile: async () => {
+    try {
+        const response = await api.get('/users/me')
+        set({ profile: response.data })
+    } catch {
+        // Token invalid — logout
+        localStorage.removeItem('token')
+        localStorage.removeItem('tokenExpiresAt')
+        set({ token: null, profile: null, isAuthenticated: false })
+    }
+    },
 
   // Update profile
   updateProfile: async (updateData) => {
